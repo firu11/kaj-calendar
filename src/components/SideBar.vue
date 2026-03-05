@@ -18,7 +18,7 @@ const slots = useSlots();
       <router-link to="/settings">
         <FiSettings />
       </router-link>
-      <a href="https://github.com/firu11/git-calendar-web" target="_blank">
+      <a href="https://github.com/git-calendar/web-client" target="_blank">
         <FiGithub />
       </a>
     </div>
