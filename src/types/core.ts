@@ -19,6 +19,7 @@ export interface CalendarApi {
   cloneCalendar(name: string, url: string): void;
   removeCalendar(name: string): void;
   listCalendars(): string[];
+  loadCalendars(): void;
 
   createEvent(event: CalendarEvent): CalendarEvent;
   updateEvent(event: CalendarEvent): CalendarEvent;

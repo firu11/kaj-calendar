@@ -8,6 +8,7 @@ import { useTranslation } from '@/composables/useTranslation';
 
 await CalendarCore.setCorsProxy('http://localhost:8000');
 await CalendarCore.createCalendar('Main');
+await CalendarCore.loadCalendars();
 
 const { i18n } = useTranslation();
 
