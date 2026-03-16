@@ -5,7 +5,6 @@ import MonthSideMap from '@/components/MonthSideMap.vue';
 import TopBar from '@/components/TopBar.vue';
 import CalendarList from '@/components/CalendarList.vue';
 import EventModal from '@/components/EventModal.vue';
-import TestWasm from '@/components/TestWasm.vue';
 import CalendarModal from '@/components/CalendarModal.vue';
 
 import { calendarViewValues, useSettings, type CalendarView } from '@/composables/useSettings';

@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { CalendarCore } from '@/wasm/core-wrapper';
-import { FiPlus } from 'vue-icons-plus/fi';
+import { FiTrash, FiPlus } from 'vue-icons-plus/fi';
 import { onMounted, ref, inject } from 'vue';
 import { openCalendarModalKey } from '@/types/injectionKeys';
+
+const emit = defineEmits(['refresh-data']);
 
 interface Calendar {
   name: string;
   checked: boolean;
 }
-
 const calendars = ref<Calendar[]>([]);
 
 const openCalendarModal = inject(openCalendarModalKey);
@@ -33,6 +34,13 @@ async function updateData() {
     calendars.value.push({ name: name, checked: true });
   }
 }
+
+async function deleteCalendar(calendar: Calendar) {
+  await CalendarCore.removeCalendar(calendar.name);
+  await CalendarCore.loadCalendars();
+  emit('refresh-data');
+}
+
 defineExpose({ updateData });
 </script>
 
@@ -44,16 +52,21 @@ defineExpose({ updateData });
         <FiPlus />
       </button>
     </div>
-    <label v-for="cal in calendars" :key="cal.name" class="cal-label">
-      <input
-        type="checkbox"
-        :id="checkboxName(cal.name)"
-        :name="checkboxName(cal.name)"
-        :checked="cal.checked"
-        @change="toggle(cal)"
-      />
-      <span class="cal-name">{{ cal.name }}</span>
-    </label>
+    <div v-for="cal in calendars" :key="cal.name" class="calendar">
+      <label class="cal-label">
+        <input
+          type="checkbox"
+          :id="checkboxName(cal.name)"
+          :name="checkboxName(cal.name)"
+          :checked="cal.checked"
+          @change="toggle(cal)"
+        />
+        <span class="cal-name">{{ cal.name }}</span>
+      </label>
+      <button @click="deleteCalendar(cal)">
+        <FiTrash />
+      </button>
+    </div>
   </div>
 </template>
 
@@ -95,20 +108,37 @@ defineExpose({ updateData });
   }
 }
 
+.calendar {
+  display: flex;
+  height: 2rem;
+  padding: 0.3rem;
+
+  border-radius: var(--small-border-radius);
+
+  &:hover {
+    background-color: var(--sidebar-hover-color);
+  }
+
+  > button {
+    height: 100%;
+    aspect-ratio: 1/1;
+    padding: 0.25rem;
+    margin-left: auto;
+    background-color: var(--sidebar-bg-color);
+
+    &:hover:not(:disabled) {
+      background-color: color-mix(in srgb, var(--sidebar-color), white 20%);
+    }
+  }
+}
+
 .cal-label {
   display: flex;
   align-items: center;
   gap: 0.7rem;
 
-  padding: 0.3rem 0.5rem;
-  border-radius: var(--small-border-radius);
-
   cursor: pointer;
   user-select: none;
-
-  &:hover {
-    background-color: var(--sidebar-hover-color);
-  }
 }
 
 .cal-name {
