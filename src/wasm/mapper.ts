@@ -1,15 +1,15 @@
 import { DateTime } from 'luxon';
 
-const dateTimeFieldNames: string[] = ['from', 'to'];
+const dateTimeFieldNames: string[] = ['from', 'to', 'until'];
 
-// This shit does transform the JSON date values (ISO format) to a luxon DateTime object, but only internally,
-// meaning I don't know how validation in TS/JS works with the lack of reflection (more like doesnt),
-// so it only makes sure that the date fields in JSON get parsed, but it still saves them as any, which seems strange to me
+// This shit does transform the JSON date strings (ISO format) to a luxon DateTime object, but only internally.
+// Meaning I don't know how validation in TS/JS works (more like doesn't) with the lack of reflection,
+// so it only makes sure that the date fields in JSON get parsed, but it still saves them as any, which seems strange to me.
 //
 // If you do:
 //  const inputJSON = { /* stuff */ };
 //  const event: CalendarEvent = inputJSON;
-// it works haha, but event.from.day crashes, because the from is still a fakin string or js standard Date.
+// it works haha, but event.from.day crashes, because the from is still a fakin string or standard JS Date object.
 //
 // So this hydrateDates tries to parse it beforehand.
 export function hydrateDates<T>(data: unknown): T {
@@ -29,7 +29,7 @@ export function hydrateDates<T>(data: unknown): T {
       });
 
       if (!dt.isValid) {
-        console.warn(`Bad ISO in ${key}: ${value} → ${dt.invalidExplanation}`);
+        console.warn(`Bad ISO in ${key}: ${value} -> ${dt.invalidExplanation}`);
         result[key] = null; // or throw, or keep as string, etc.
       } else {
         result[key] = dt;
@@ -37,7 +37,7 @@ export function hydrateDates<T>(data: unknown): T {
     } else if (value && typeof value === 'object' && !Array.isArray(value)) {
       result[key] = hydrateDates(value); // recursively for objects
     } else {
-      result[key] = value;
+      result[key] = value; // just assign
     }
   }
 
@@ -62,14 +62,11 @@ export function dehydrateDates(data: unknown): unknown {
 
   for (const [key, value] of Object.entries(data)) {
     if (value instanceof DateTime) {
-      // date
-      result[key] = value.toISO();
+      result[key] = value.toISO(); // date
     } else if (value && typeof value === 'object') {
-      // recursive for objects
-      result[key] = dehydrateDates(value);
+      result[key] = dehydrateDates(value); // recursively for objects
     } else {
-      // we dont know, we dont care
-      result[key] = value;
+      result[key] = value; // just assign
     }
   }
 
