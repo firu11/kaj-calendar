@@ -74,10 +74,10 @@ function updateFormFromEvent(event: CalendarEvent | undefined) {
     form.repeatFreq = event.repeat.frequency as Freq;
 
     if (event.repeat.count && event.repeat.count > 1) {
-      form.repeatEnd = 'After';
+      form.repeatEnd = 'after';
       form.repeatEndAfter = event.repeat.count;
     } else if (event.repeat.until) {
-      form.repeatEnd = 'On';
+      form.repeatEnd = 'on';
       form.repeatEndOn = event.repeat.until.toISOTime({ includeOffset: false, precision: 'minute' }) ?? '';
     } else {
       console.log('Something went wrong with the events repetition. Both Until and Count are undefined or invalid.');
@@ -108,8 +108,8 @@ function reconstructEvent(): CalendarEvent {
     event.repeat = {
       frequency: form.repeatFreq as Freq,
       interval: 1, // TODO
-      until: form.repeatEnd == 'On' ? DateTime.fromISO(`${form.fromDate}`) : undefined,
-      count: form.repeatEnd == 'After' ? form.repeatEndAfter : -1,
+      until: form.repeatEnd == 'on' ? DateTime.fromISO(`${form.fromDate}`) : undefined,
+      count: form.repeatEnd == 'after' ? form.repeatEndAfter : 0,
     };
   } else {
     event.repeat = undefined;
