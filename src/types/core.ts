@@ -9,8 +9,8 @@ export interface CalendarEvent {
   to: DateTime;
   calendar: string;
   tag: string;
+  parentId?: string;
   repeat?: Repetition;
-  masterId?: string;
 }
 
 export interface Repetition {
@@ -18,7 +18,7 @@ export interface Repetition {
   interval: number;
   until?: DateTime;
   count?: number;
-  //exceptions: string[]
+  exceptions: readonly string[];
 }
 
 // A interface showing all the methods of CalendarCore.
@@ -35,7 +35,7 @@ export interface CalendarApi {
 
   createEvent(event: CalendarEvent): CalendarEvent;
   updateEvent(event: CalendarEvent): CalendarEvent;
-  updateEventWithStrategy(event: CalendarEvent, strategy: UpdateStrategy): CalendarEvent;
+  updateRepeatingEvent(oldEvent: CalendarEvent, newEvent: CalendarEvent, strategy: UpdateStrategy): CalendarEvent;
   removeEvent(event: CalendarEvent): void;
 
   getEvent(id: string): CalendarEvent;

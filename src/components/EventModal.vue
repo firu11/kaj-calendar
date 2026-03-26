@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted, toRaw } from 'vue';
+import { ref, reactive, watch, onMounted } from 'vue';
 import { Freq, UpdateStrategy, type CalendarEvent } from '@/types/core';
 import { DateTime } from 'luxon';
 import { CalendarCore } from '@/wasm/core-wrapper';
@@ -10,7 +10,7 @@ const repeatEndOptions = [
   { value: 'after', label: 'After' },
 ];
 const frequencyOptions = [
-  { value: null, label: 'never' },
+  { value: Freq.Invalid, label: 'never' },
   { value: Freq.Day, label: 'daily' },
   { value: Freq.Week, label: 'weekly' },
   { value: Freq.Month, label: 'monthly' },
@@ -31,7 +31,7 @@ const form = reactive({
   calendar: '',
   entireDay: false,
 
-  repeatFreq: null as Freq | null,
+  repeatFreq: Freq.Invalid,
   repeatEnd: 'after',
   repeatEndOn: DateTime.now().plus({ week: 1 }).toISODate(),
   repeatEndAfter: 5,
@@ -41,10 +41,10 @@ const calendarNames = ref([] as string[]);
 
 let originalEvent: CalendarEvent | undefined = undefined;
 watch(
-  () => thisModal.event,
+  () => thisModal.event.value,
   (newEvent) => {
-    originalEvent = structuredClone(toRaw(newEvent.value)); // copy
-    updateFormFromEvent(newEvent.value);
+    originalEvent = newEvent; // copy
+    updateFormFromEvent(newEvent);
   },
   { immediate: true }, // fire right onMounted, not wait till first change
 );
@@ -56,11 +56,8 @@ function updateFormFromEvent(event: CalendarEvent | undefined) {
   form.location = event.location ?? '';
   form.description = event.description ?? '';
 
-  form.fromDate = event.from.toISODate() ?? '';
-  form.toDate = event.to.toISODate() ?? '';
-
-  form.fromTime = event.from.toISOTime({ includeOffset: false, precision: 'minute' }) ?? '';
-  form.toTime = event.to.toISOTime({ includeOffset: false, precision: 'minute' }) ?? '';
+  [form.fromDate, form.fromTime] = dateTimeToIsoDateAndTime(event.from);
+  [form.toDate, form.toTime] = dateTimeToIsoDateAndTime(event.to);
 
   if (form.fromTime == '00:00' && form.toTime == '23:59') {
     form.entireDay = true;
@@ -71,7 +68,7 @@ function updateFormFromEvent(event: CalendarEvent | undefined) {
   }
 
   if (event.repeat) {
-    form.repeatFreq = event.repeat.frequency as Freq;
+    form.repeatFreq = event.repeat.frequency;
 
     if (event.repeat.count && event.repeat.count > 1) {
       form.repeatEnd = 'after';
@@ -88,34 +85,41 @@ function updateFormFromEvent(event: CalendarEvent | undefined) {
 }
 
 function reconstructEvent(): CalendarEvent {
-  const event = originalEvent ?? ({} as CalendarEvent);
-
-  event.id = thisModal.event.value?.id;
-  event.title = form.title;
-  event.location = form.location;
-  event.description = form.description;
-  event.calendar = form.calendar;
-
-  if (form.entireDay) {
-    event.from = DateTime.fromISO(`${form.fromDate}T00:00`);
-    event.to = DateTime.fromISO(`${form.toDate}T23:59`);
-  } else {
-    event.from = DateTime.fromISO(`${form.fromDate}T${form.fromTime}`);
-    event.to = DateTime.fromISO(`${form.toDate}T${form.toTime}`);
-  }
-
-  if (form.repeatFreq) {
-    event.repeat = {
-      frequency: form.repeatFreq as Freq,
-      interval: 1, // TODO
-      until: form.repeatEnd == 'on' ? DateTime.fromISO(`${form.fromDate}`) : undefined,
-      count: form.repeatEnd == 'after' ? form.repeatEndAfter : 0,
-    };
-  } else {
-    event.repeat = undefined;
-  }
-
+  const event: CalendarEvent = {
+    id: thisModal.event.value?.id,
+    title: form.title,
+    location: form.location,
+    description: form.description,
+    calendar: form.calendar,
+    tag: originalEvent!.tag, // TODO
+    from: form.entireDay
+      ? DateTime.fromISO(`${form.fromDate}T00:00`, { zone: originalEvent?.from.zone })
+      : DateTime.fromISO(`${form.fromDate}T${form.fromTime}`, { zone: originalEvent?.from.zone }),
+    to: form.entireDay
+      ? DateTime.fromISO(`${form.toDate}T23:59`, { zone: originalEvent?.to.zone })
+      : DateTime.fromISO(`${form.toDate}T${form.toTime}`, { zone: originalEvent?.to.zone }),
+    repeat:
+      form.repeatFreq != Freq.Invalid
+        ? {
+            frequency: form.repeatFreq,
+            interval: 1,
+            until:
+              form.repeatEnd === 'on'
+                ? DateTime.fromISO(form.repeatEndOn, { zone: originalEvent?.repeat?.until?.zone })
+                : undefined,
+            count: form.repeatEnd === 'after' ? form.repeatEndAfter : 0,
+            exceptions: originalEvent?.repeat?.exceptions ?? [],
+          }
+        : undefined,
+    parentId: originalEvent?.parentId,
+  };
   return event;
+}
+
+function dateTimeToIsoDateAndTime(time: DateTime): [string, string] {
+  const dateStr = time.toISODate() ?? '';
+  const timeStr = time.toISOTime({ includeOffset: false, precision: 'minute' }) ?? '';
+  return [dateStr, timeStr];
 }
 
 async function saveEvent(e: Event) {
@@ -129,12 +133,11 @@ async function saveEvent(e: Event) {
       newEvent = await CalendarCore.createEvent(event);
       console.log('created event:', newEvent);
     } else if (!event.repeat && !originalEvent?.repeat) {
-      console.log(event.repeat, originalEvent?.repeat, event.masterId);
       newEvent = await CalendarCore.updateEvent(event);
       console.log('updated event:', newEvent);
     } else {
       // TODO popup with update strategy options
-      newEvent = await CalendarCore.updateEventWithStrategy(event, UpdateStrategy.All);
+      newEvent = await CalendarCore.updateRepeatingEvent(originalEvent!, event, UpdateStrategy.All);
       console.log('updated event with strategy:', newEvent);
     }
   } catch (err) {
