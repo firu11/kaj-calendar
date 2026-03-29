@@ -1,12 +1,13 @@
 <script setup lang="ts">
 const props = defineProps<{
   options: string[];
+  disabled?: string[];
   modelValue: string;
   name?: string;
 }>();
 
 const emit = defineEmits<{
-  'update:modelValue': [value: string];
+  'update:modelValue': [value: string]; // special thing for using this component as <MultiToggle v-model="SOMETHING" />
 }>();
 
 const uid = Math.random().toString(36).slice(2, 7);
@@ -15,6 +16,7 @@ const id = (i: number) => `toggle-${uid}-${i}`;
 
 <template>
   <div ref="toggle" class="toggle">
+    <!-- second template cuz why not, it would need anothed div instead -->
     <template v-for="(option, i) in options" :key="option">
       <input
         type="radio"
@@ -22,6 +24,7 @@ const id = (i: number) => `toggle-${uid}-${i}`;
         :name="name ?? `toggle-${uid}`"
         :value="option"
         :checked="modelValue === option"
+        :disabled="disabled?.includes(option)"
         @change="emit('update:modelValue', option)"
       />
       <label :for="id(i)">{{ option }}</label>
@@ -31,7 +34,7 @@ const id = (i: number) => `toggle-${uid}-${i}`;
 
 <style scoped>
 .toggle {
-  height: 2.2rem;
+  height: 2rem;
   display: inline-flex;
   background-color: var(--btn-bg-color);
   border-radius: var(--small-border-radius);
@@ -47,7 +50,9 @@ const id = (i: number) => `toggle-${uid}-${i}`;
 .toggle label {
   position: relative;
   z-index: 1;
-  padding: 0.4em 0.6em;
+  padding: 0.8em;
+  display: flex;
+  align-items: center;
   font-size: 0.9rem;
   border-radius: calc(var(--small-border-radius) - 2px); /* minus toggle padding */
   cursor: pointer;
@@ -59,12 +64,16 @@ const id = (i: number) => `toggle-${uid}-${i}`;
   opacity: 0.85;
 }
 
-.toggle label:active {
+.toggle input:enabled + label:active {
   transform: translateY(1px);
 }
 
 .toggle input[type='radio']:checked + label {
   background-color: rgba(255, 255, 255, 0.1);
   opacity: 1;
+}
+
+.toggle input[disabled] + label {
+  text-decoration: line-through;
 }
 </style>

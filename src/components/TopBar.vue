@@ -1,34 +1,43 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue';
 import { moveView } from '@/utils';
 import { DateTime } from 'luxon';
-import { FiChevronLeft, FiChevronRight } from 'vue-icons-plus/fi';
+import { FiChevronLeft, FiChevronRight, FiSidebar } from 'vue-icons-plus/fi';
 import { useRouter } from 'vue-router';
+import MultiToggle from '@/components/MultiToggle.vue';
 
+const emit = defineEmits(['sidebar-toggle']);
 const router = useRouter();
-
 const today = DateTime.now();
+
+const views = ['4days', 'Week', 'Month'];
+const view = ref(views[1]);
+
+function changeView(viewName: string) {
+  view.value = viewName;
+  router.push({ name: 'calendar', params: { view: view.value.toLowerCase() } });
+}
+
+function jumpToToday() {
+  router.push({ name: 'calendar', params: { year: today.year, month: today.month, day: today.day } });
+}
+
+watch(view, changeView);
 </script>
 
 <template>
   <header>
-    <slot />
+    <button id="sidebar-toggle" @click="emit('sidebar-toggle')">
+      <FiSidebar />
+    </button>
 
-    <!-- TODO <MultiToggle v-model="idk" :options="['4days', 'Week', 'Month']" style="align-self: center" /> -->
+    <!-- TODO: remove disabled -->
+    <MultiToggle v-model="view" :options="views" :disabled="['4days', 'Month']" name="view-selector" />
 
-    <div id="view-btns">
-      <router-link :to="{ name: 'calendar', params: { year: today.year, month: today.month, day: today.day } }">
-        {{ $t('todayBtn') }}
-      </router-link>
-      <router-link :to="{ name: 'calendar', params: { view: '4days' } }" :class="{ disabled: true }">
-        {{ $t('views.4days') }}
-      </router-link>
-      <router-link :to="{ name: 'calendar', params: { view: 'week' } }">
-        {{ $t('views.week') }}
-      </router-link>
-      <router-link :to="{ name: 'calendar', params: { view: 'month' } }" :class="{ disabled: true }">
-        {{ $t('views.month') }}
-      </router-link>
-    </div>
+    <button id="today-btn" @click="jumpToToday">
+      {{ $t('todayBtn') }}
+    </button>
+
     <div id="view-nav-btns">
       <button @click="moveView(true, router)"><FiChevronLeft /></button>
       <button @click="moveView(false, router)"><FiChevronRight /></button>
@@ -47,14 +56,8 @@ header {
   grid-area: topbar;
 }
 
-#view-btns {
-  display: flex;
-  gap: 0.5rem;
-
-  > .disabled {
-    opacity: 0.5;
-    pointer-events: none;
-  }
+#sidebar-toggle {
+  margin-right: auto;
 }
 
 #view-nav-btns {

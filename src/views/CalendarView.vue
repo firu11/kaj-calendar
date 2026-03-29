@@ -7,7 +7,7 @@ import CalendarList from '@/components/CalendarList.vue';
 import EventModal from '@/components/EventModal.vue';
 import CalendarModal from '@/components/CalendarModal.vue';
 
-import { computed, type ComputedRef, useTemplateRef } from 'vue';
+import { computed, type ComputedRef, ref, useTemplateRef } from 'vue';
 import { useRoute } from 'vue-router';
 import { calendarViewValues, useSettings, type CalendarView } from '@/composables/useSettings';
 import { useKeyboard } from '@/composables/useKeyboard';
@@ -19,6 +19,7 @@ const calendarModal = useCalendarModal();
 const eventModal = useEventModal();
 const { settings } = useSettings();
 const route = useRoute();
+const sidebarOpen = ref(window.innerWidth >= 768); // opened on load only when desktop width
 
 const activeView: ComputedRef<CalendarView> = computed(() => {
   const param = route.params.view;
@@ -34,8 +35,8 @@ const activeView: ComputedRef<CalendarView> = computed(() => {
 });
 
 const views = {
+  '4days': [XDaysView, 4],
   week: [XDaysView, 7],
-  '4days': [null, 4], //[XDaysView, 4],
   month: [null, null],
 };
 
@@ -48,26 +49,26 @@ function updateCallDown() {
 </script>
 
 <template>
-  <span id="alpha">Alpha version</span>
   <div id="calendar-view">
-    <SideBar>
+    <SideBar :hidden="!sidebarOpen">
       <MonthSideMap />
       <CalendarList ref="calendars-list" @refresh-data="updateCallDown" />
     </SideBar>
 
-    <TopBar />
+    <TopBar @sidebar-toggle="sidebarOpen = !sidebarOpen" />
     <component :is="views[activeView][0]" :num-of-days="views[activeView][1]" ref="calendar-view" />
 
     <EventModal v-if="eventModal.isOpen.value" @refresh-data="updateCallDown" />
     <CalendarModal v-if="calendarModal.isOpen.value" @refresh-data="updateCallDown" />
   </div>
+  <span id="alpha">Alpha version</span>
 </template>
 
 <style scoped>
 #alpha {
   position: absolute;
-  top: 1rem;
-  left: calc(var(--sidebar-width) + 1rem);
+  bottom: 0.5rem;
+  right: 0.5rem;
   padding: 0.1rem 0.3rem;
 
   font-size: 0.7rem;
@@ -75,6 +76,23 @@ function updateCallDown() {
   color: var(--git-color);
   border: 1px solid var(--git-color);
   border-radius: 2rem;
+  z-index: 1;
+  pointer-events: none;
+  background-color: var(--bg-color);
+}
+
+#calendar-view:has(aside[hidden]) {
+  grid-template-columns: auto;
+  grid-template-areas:
+    'topbar'
+    'content';
+}
+
+aside[hidden] {
+  position: absolute;
+  height: 100%;
+  left: calc(-1 * var(--sidebar-width));
+  width: var(--sidebar-width);
 }
 
 #calendar-view {
@@ -92,10 +110,12 @@ component {
   background-color: red;
 }
 
-/* mobile TODO better */
 @media (max-width: 768px) {
   aside {
-    display: none !important;
+    position: absolute;
+    height: 100%;
+    width: var(--sidebar-width);
+    z-index: 600;
   }
 
   #calendar-view {
