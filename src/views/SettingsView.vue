@@ -11,6 +11,7 @@ const { dayNameLong } = useTranslation();
 <template>
   <form>
     <RouterLink to="/">&lt; Back to calendar</RouterLink>
+
     <label
       >{{ $t('settings.language') }}:
       <select v-model="settings.language">
@@ -19,6 +20,7 @@ const { dayNameLong } = useTranslation();
         </option>
       </select>
     </label>
+
     <label>
       {{ $t('settings.timeFormat') }}:
       <select name="time-format" v-model="settings.timeFormat">
@@ -26,6 +28,7 @@ const { dayNameLong } = useTranslation();
         <option value="h23">{{ $t('settings.24hourFormat') }}</option>
       </select>
     </label>
+
     <label>
       {{ $t('settings.weekStart') }}:
       <select name="week-start" v-model="settings.weekStart">
@@ -34,6 +37,16 @@ const { dayNameLong } = useTranslation();
         </option>
       </select>
     </label>
+
+    <label>
+      {{ $t('settings.dragPrecision') }}:
+      <select name="drap-precision" v-model="settings.dragPrecisionMinutes">
+        <option value="15">15min</option>
+        <option value="30">30min</option>
+        <option value="60">60min</option>
+      </select>
+    </label>
+
     <label>
       {{ $t('settings.themes.theme') }}:
       <select name="theme" v-model="settings.theme">

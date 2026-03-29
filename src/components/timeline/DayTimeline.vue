@@ -71,7 +71,7 @@ const drag = ref({ active: false, startY: 0 });
 
 const snapToGridHeight = computed(() => {
   if (!timelineRef.value) return 0;
-  return timelineRef.value.clientHeight / numberOfHours() / 2; // 30 min grid
+  return timelineRef.value.clientHeight / numberOfHours() / (60 / settings.value.dragPrecisionMinutes);
 });
 
 const snappedHeight = computed(() => {
@@ -96,8 +96,8 @@ function getEventTimes(): [DateTime, DateTime] {
 
   const endSlots = startSlots + durationSlots;
 
-  const startTotalMinutes = startSlots * 30;
-  const endTotalMinutes = endSlots * 30;
+  const startTotalMinutes = startSlots * settings.value.dragPrecisionMinutes;
+  const endTotalMinutes = endSlots * settings.value.dragPrecisionMinutes;
 
   const startTime = props.date
     .set({

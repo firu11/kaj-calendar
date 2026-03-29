@@ -10,7 +10,8 @@
     "timeFormat": "Formát času",
     "12hourFormat": "12ti hodinový čas",
     "24hourFormat": "24ti hodinový čas",
-    "weekStart": "Začátek týdne"
+    "weekStart": "Začátek týdne",
+    "dragPrecision": "Přesnost při tažení"
   },
   "event": {
     "new": "Nová událost",

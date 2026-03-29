@@ -22,6 +22,7 @@ type UserSettings = {
   defaultView: CalendarView;
   dayViewStartHour: HourNumbers;
   dayViewEndHour: HourNumbers;
+  dragPrecisionMinutes: number;
 };
 
 // default settings
@@ -35,6 +36,7 @@ const settings = useStorage<UserSettings>(
     defaultView: 'week',
     dayViewStartHour: 6,
     dayViewEndHour: 0,
+    dragPrecisionMinutes: 30,
   },
   localStorage,
   { mergeDefaults: true },
