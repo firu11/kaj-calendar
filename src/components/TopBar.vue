@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { moveView } from '@/utils';
+import { getStartOfWeek, moveView } from '@/utils';
 import { DateTime } from 'luxon';
 import { FiChevronLeft, FiChevronRight, FiSidebar } from 'vue-icons-plus/fi';
 import { useRouter } from 'vue-router';
@@ -8,7 +8,6 @@ import MultiToggle from '@/components/MultiToggle.vue';
 
 const emit = defineEmits(['sidebar-toggle']);
 const router = useRouter();
-const today = DateTime.now();
 
 const views = ['4days', 'Week', 'Month'];
 const view = ref(views[1]);
@@ -19,6 +18,15 @@ function changeView(viewName: string) {
 }
 
 function jumpToToday() {
+  const today = DateTime.now();
+  const params = router.currentRoute.value.params;
+
+  if (params.view === 'week') {
+    // special case for week
+    const weekStart = getStartOfWeek(today);
+    router.push({ name: 'calendar', params: { year: weekStart.year, month: weekStart.month, day: weekStart.day } });
+    return;
+  }
   router.push({ name: 'calendar', params: { year: today.year, month: today.month, day: today.day } });
 }
 

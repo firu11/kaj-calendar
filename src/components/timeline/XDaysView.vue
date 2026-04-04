@@ -19,12 +19,7 @@ const props = defineProps<{
 }>();
 
 const startDate = computed(() => {
-  const d = getCurrentViewDatetime(route.params);
-  const diff = (d.weekday - settings.value.weekStart + 7) % 7;
-  let startDate = d.minus({ days: diff });
-
-  startDate.set({ hour: 0, minute: 0, second: 0, millisecond: 0 }); // maybe not needed
-  return startDate;
+  return getCurrentViewDatetime(route.params);
 });
 
 watch(

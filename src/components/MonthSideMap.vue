@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { useSettings } from '@/composables/useSettings';
 import { useTranslation } from '@/composables/useTranslation';
 import router from '@/router';
-import { getCurrentViewDatetime } from '@/utils';
+import { getCurrentViewDatetime, getViewLengthInDays } from '@/utils';
 import { DateTime } from 'luxon';
 import { computed, ref, watch } from 'vue';
 import { FiChevronDown, FiChevronUp } from 'vue-icons-plus/fi';
@@ -9,32 +10,64 @@ import { useRoute } from 'vue-router';
 
 const { monthNameLong } = useTranslation();
 const route = useRoute();
+const { settings } = useSettings();
+
+const currentDatetime = ref<DateTime>(DateTime.now());
+const monthTracker = ref(currentDatetime.value.month);
+const yearTracker = ref(currentDatetime.value.year);
+
+const viewInterval = computed(() => {
+  const start = currentDatetime.value;
+  const length = getViewLengthInDays(route.params);
+
+  return {
+    start,
+    end: start.plus({ days: length - 1 }),
+  };
+});
+
+const days = computed(() => {
+  const firstOfTheMonth = DateTime.fromObject({
+    year: yearTracker.value,
+    month: monthTracker.value,
+    day: 1,
+  });
+
+  const result: DateTime[] = [];
+
+  // adjust weekday based on custom week start
+  const weekday = firstOfTheMonth.weekday; // 1–7 (Mon–Sun)
+  const weekStart = settings.value.weekStart; // 1–7
+
+  const numOfDaysFromLastMonth = (weekday - weekStart + 7) % 7;
+
+  // trailing days from previous month
+  for (let i = numOfDaysFromLastMonth; i > 0; i--) {
+    result.push(firstOfTheMonth.minus({ days: i }));
+  }
+
+  // fill remaining cells (6×7 = 42)
+  const moreDaysNeeded = 6 * 7 - result.length;
+  for (let i = 0; i < moreDaysNeeded; i++) {
+    result.push(firstOfTheMonth.plus({ days: i }));
+  }
+
+  return result;
+});
 
 watch(
   () => route.params,
   () => {
     currentDatetime.value = getCurrentViewDatetime(route.params);
 
-    // if the week clicked is from the previous month, but has at least one day in the current -> dont change
-    if (
-      currentDatetime.value.month != monthTracker.value &&
-      currentDatetime.value.daysInMonth! - currentDatetime.value.day <= 5
-    )
-      return;
-
-    monthTracker.value = currentDatetime.value.month;
-    yearTracker.value = currentDatetime.value.year;
+    // make sure that the highlited interval is always fully visible
+    if (viewInterval.value.end > days.value[days.value.length - 1] || viewInterval.value.start < days.value[0]) {
+      monthTracker.value = currentDatetime.value.month;
+      yearTracker.value = currentDatetime.value.year;
+    }
   },
+  { immediate: true },
 );
-
-const currentDatetime = ref(getCurrentViewDatetime(route.params));
-
-const highlightedWeekNum = computed(() => {
-  return currentDatetime.value.weekNumber;
-});
-
-const monthTracker = ref(currentDatetime.value.month);
-const yearTracker = ref(currentDatetime.value.year);
 
 function changeMonthNum(up: boolean) {
   if (up) monthTracker.value++;
@@ -49,34 +82,6 @@ function changeMonthNum(up: boolean) {
     yearTracker.value--;
   }
 }
-
-const days = computed(() => {
-  const firstOfTheMonth = DateTime.now().set({ year: yearTracker.value, month: monthTracker.value, day: 1 });
-
-  const result: DateTime[] = [];
-
-  // trailing days from previous month
-  const numOfDaysFromLastMonth = firstOfTheMonth.weekday - 1;
-  for (let i = numOfDaysFromLastMonth; i > 0; i--) {
-    result.push(firstOfTheMonth.minus({ days: i }));
-  }
-
-  // add more days until we fill at least 42 cells (6×7)
-  const moreDaysNeeded = 6 * 7 - result.length;
-  for (let i = 0; i < moreDaysNeeded; i++) {
-    result.push(firstOfTheMonth.plus({ days: i }));
-  }
-
-  return result;
-});
-
-const weeks = computed(() => {
-  const chunks = [];
-  for (let i = 0; i < days.value.length; i += 7) {
-    chunks.push(days.value.slice(i, i + 7));
-  }
-  return chunks;
-});
 </script>
 
 <template>
@@ -97,23 +102,19 @@ const weeks = computed(() => {
       </div>
 
       <div
-        v-for="(week, wIndex) in weeks"
-        :key="wIndex"
-        class="week-row"
-        :class="{ 'highlighted-week': week[0]?.weekNumber == highlightedWeekNum }"
-        @click="router.replace({ params: { year: week[0]?.year, month: week[0]?.month, day: week[0]?.day } })"
+        v-for="d in days"
+        :key="d.toISODate()!"
+        class="day"
+        :class="{
+          today: d.hasSame(DateTime.now(), 'day'),
+          'not-this-month': d.month !== monthTracker,
+          'in-range': d >= viewInterval.start && d <= viewInterval.end,
+          'range-start': d.hasSame(viewInterval.start, 'day'),
+          'range-end': d.hasSame(viewInterval.end, 'day'),
+        }"
+        @click="router.replace({ params: { year: d?.year, month: d?.month, day: d?.day } })"
       >
-        <div
-          v-for="d in week"
-          :key="d.day"
-          class="day"
-          :class="{
-            today: d.hasSame(DateTime.now(), 'day'),
-            'not-this-month': d.month !== monthTracker,
-          }"
-        >
-          {{ d.day }}
-        </div>
+        {{ d.day }}
       </div>
     </div>
   </div>
@@ -170,34 +171,13 @@ const weeks = computed(() => {
     padding-bottom: 0.5rem;
   }
 
-  .week-row {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: subgrid;
-    border: 1px transparent solid;
-    border-radius: var(--small-border-radius);
-
-    &.highlighted-week {
-      background-color: var(--git-bg-color) !important;
-      color: var(--text-color-hard);
-
-      .day.not-this-month {
-        opacity: 0.7;
-      }
-    }
-
-    &:hover {
-      background-color: var(--sidebar-hover-color);
-    }
-  }
-
   .day {
     aspect-ratio: 1 / 1;
+    height: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.9rem;
-    border-radius: var(--small-border-radius);
     cursor: pointer;
 
     &.today {
@@ -216,7 +196,26 @@ const weeks = computed(() => {
     }
 
     &.not-this-month {
-      opacity: 0.3;
+      color: color-mix(in srgb, var(--text-color) 30%, transparent);
+
+      &.in-range {
+        color: color-mix(in srgb, var(--text-color) 50%, transparent);
+      }
+    }
+
+    &.in-range {
+      background-color: var(--git-bg-color);
+      color: var(--text-color-hard);
+    }
+
+    &.range-start {
+      border-top-left-radius: var(--small-border-radius);
+      border-bottom-left-radius: var(--small-border-radius);
+    }
+
+    &.range-end {
+      border-top-right-radius: var(--small-border-radius);
+      border-bottom-right-radius: var(--small-border-radius);
     }
   }
 }

@@ -4,7 +4,7 @@ import { useSettings } from '@/composables/useSettings';
 
 const { settings } = useSettings();
 
-export function getCurrentViewDatetime(params: RouteParamsGeneric) {
+export function getCurrentViewDatetime(params: RouteParamsGeneric): DateTime {
   const today = DateTime.now();
 
   if (!params) return today;
@@ -32,6 +32,26 @@ export function moveView(back: boolean, router: Router) {
       router.replace({ name: 'calendar', params: { year: newDate.year, month: newDate.month, day: newDate.day } });
     case '4days':
   }
+}
+
+export function getViewLengthInDays(params: RouteParamsGeneric): number {
+  const currentDatetime = getCurrentViewDatetime(params);
+
+  switch (params.view) {
+    case 'month':
+      return currentDatetime.daysInMonth ?? 30;
+    case 'week':
+      return 7;
+    case '4days':
+      return 4;
+    default:
+      return 1;
+  }
+}
+
+export function getStartOfWeek(dt: DateTime): DateTime {
+  const diff = (dt.weekday - settings.value.weekStart + 7) % 7;
+  return dt.minus({ days: diff }).startOf('day');
 }
 
 // Formats times based on timeFormat (17/5 pm) and puts it together like: '10:00 - 11:30'.
