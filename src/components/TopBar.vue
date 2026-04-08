@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { getStartOfWeek, moveView } from '@/utils';
+import { getCurrentViewDatetime, getStartOfWeek, moveView } from '@/utils';
 import { DateTime } from 'luxon';
 import { FiChevronLeft, FiChevronRight, FiSidebar } from 'vue-icons-plus/fi';
 import { useRouter } from 'vue-router';
@@ -14,8 +14,23 @@ const view = ref(capitalized(router.currentRoute.value.params.view.toString()));
 
 function changeView(viewName: string) {
   view.value = viewName;
-  router.push({ name: 'calendar', params: { view: view.value.toLowerCase() } });
+  if (view.value === 'Week') {
+    // week view should be aligned
+    const startOfWeek = getStartOfWeek(getCurrentViewDatetime(router.currentRoute.value.params));
+    router.push({
+      name: 'calendar',
+      params: {
+        view: view.value.toLowerCase(),
+        year: startOfWeek.year,
+        month: startOfWeek.month,
+        day: startOfWeek.day,
+      },
+    });
+  } else {
+    router.push({ name: 'calendar', params: { view: view.value.toLowerCase() } });
+  }
 }
+watch(view, changeView);
 
 function jumpToToday() {
   const today = DateTime.now();
@@ -36,8 +51,6 @@ function capitalized(str: string): string {
   result += str.slice(1) || '';
   return result;
 }
-
-watch(view, changeView);
 </script>
 
 <template>
