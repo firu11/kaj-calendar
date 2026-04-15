@@ -35,7 +35,12 @@
     }
   },
   "calendar": {
-    "name": "Name"
+    "name": "Name",
+    "gitCredentials": "Git credentials",
+    "username": "Username",
+    "password": "Password/Token",
+    "encrypted": "Encryption",
+    "decryptionKey": "Encryption key/password"
   },
   "views": {
     "4days": "4 days",

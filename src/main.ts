@@ -15,7 +15,7 @@ try {
   // TODO
 }
 
-await CalendarCore.createCalendar('main');
+await CalendarCore.createCalendar('main', '');
 await CalendarCore.loadCalendars();
 
 const { i18n } = useTranslation();

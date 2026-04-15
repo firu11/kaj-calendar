@@ -14,7 +14,12 @@ const form = reactive({
   url: '',
   username: '',
   password: '',
-  // decryptionKey: ''
+  encrypted: false,
+  decryptionKey: '',
+});
+const errors = reactive({
+  missingName: false,
+  missingURL: false,
 });
 
 async function submit() {
@@ -29,9 +34,12 @@ async function submit() {
 }
 
 async function init() {
-  if (form.name == '') return;
+  if (form.name == '') {
+    errors.missingName = true;
+    return;
+  }
 
-  await CalendarCore.createCalendar(form.name);
+  await CalendarCore.createCalendar(form.name, form.decryptionKey);
 
   resetForm();
   emit('refresh-data');
@@ -39,7 +47,11 @@ async function init() {
 }
 
 async function clone() {
-  await CalendarCore.cloneCalendar(form.url);
+  if (form.url == '') {
+    errors.missingURL = true;
+    return;
+  }
+  await CalendarCore.cloneCalendar(urlWithAuth(form.url, form.username, form.password), form.decryptionKey);
   await CalendarCore.loadCalendars();
 
   resetForm();
@@ -51,6 +63,25 @@ function resetForm() {
   form.how = howOptions[0];
   form.name = '';
   form.url = '';
+  form.username = '';
+  form.password = '';
+  form.encrypted = false;
+  form.decryptionKey = '';
+}
+
+function urlWithAuth(repoUrl: string, username: string, password: string): string {
+  const url = new URL(repoUrl);
+
+  if (!username) {
+    // token-only style
+    url.username = encodeURIComponent(password);
+    url.password = '';
+  } else {
+    url.username = encodeURIComponent(username);
+    url.password = encodeURIComponent(password);
+  }
+
+  return url.toString();
 }
 </script>
 
@@ -66,14 +97,40 @@ function resetForm() {
         autocomplete="none"
         :disabled="form.how != 'Init'"
         v-model="form.name"
+        :class="{ red: errors.missingName && form.how == 'Init' }"
+        @input="errors.missingName = false"
       />
 
       <input
-        type="text"
+        type="url"
         name="url"
         :placeholder="`Remote URL ${form.how == 'Init' ? '(' + $t('optionalText') + ')' : ''}`"
         autocomplete="none"
         v-model="form.url"
+        :class="{ red: errors.missingURL && form.how == 'Clone' }"
+        @input="errors.missingURL = false"
+      />
+
+      <div id="git-credentials">
+        {{ $t('calendar.gitCredentials') }}
+        <div>
+          <input type="text" name="username" :placeholder="$t('calendar.username')" v-model="form.username" />
+          <input type="password" name="password" :placeholder="$t('calendar.password')" v-model="form.password" />
+        </div>
+      </div>
+
+      <label>
+        {{ $t('calendar.encrypted') }}
+        <input type="checkbox" v-model="form.encrypted" />
+      </label>
+
+      <input
+        v-if="form.encrypted"
+        type="password"
+        name="decryption-key"
+        :placeholder="$t('calendar.decryptionKey')"
+        autocomplete="current-password"
+        v-model="form.decryptionKey"
       />
 
       <div class="bottom-btns">
@@ -85,40 +142,28 @@ function resetForm() {
 </template>
 
 <style scoped>
-#event-modal {
-  position: absolute;
-  width: 100dvw;
-  height: 100dvh;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  backdrop-filter: blur(5px);
-  background-color: rgba(0, 0, 0, 0.3);
-
-  z-index: 1000;
-
+#calendar-modal {
   form {
-    width: 80%;
-    max-width: 30rem;
-    border-radius: var(--small-border-radius);
-    border: 1px solid var(--btn-bg-color-hover);
-    background-color: var(--bg-color);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
+    > #git-credentials {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
 
-    textarea {
-      resize: vertical;
-      min-height: 2rem;
-    }
+      > div {
+        width: 100%;
+        display: flex;
+        gap: 1rem;
+        justify-content: stretch;
 
-    input,
-    select {
-      height: 2rem;
+        > * {
+          flex: 1;
+        }
+      }
     }
   }
+}
+
+input.red {
+  border: 1px solid var(--git-color);
 }
 </style>

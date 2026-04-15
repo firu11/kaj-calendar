@@ -24,8 +24,8 @@ export interface Repetition {
 // A interface showing all the methods of CalendarCore.
 // The response types are all made async (Promise<T>) using Asyncify type.
 export interface CalendarApi {
-  createCalendar(name: string): void;
-  cloneCalendar(url: string): void;
+  createCalendar(name: string, password: string): void;
+  cloneCalendar(url: string, password: string): void;
   removeCalendar(name: string): void;
   listCalendars(): string[];
   loadCalendars(): void;

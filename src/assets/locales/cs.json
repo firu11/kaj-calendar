@@ -35,7 +35,12 @@
     }
   },
   "calendar": {
-    "name": "Jméno"
+    "name": "Název",
+    "gitCredentials": "Git přihlašovací údaje",
+    "username": "Uživatelské jméno",
+    "password": "Heslo/Token",
+    "encrypted": "Šifrování",
+    "decryptionKey": "Šifrovací heslo"
   },
   "views": {
     "4days": "4 dny",
