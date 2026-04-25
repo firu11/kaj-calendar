@@ -247,6 +247,7 @@ const hoverInterval = computed(() => {
 
   &.in-range {
     background-color: var(--git-bg-color);
+    width: 101%;
     color: var(--text-color-hard);
 
     &:has(.hover-layer) {

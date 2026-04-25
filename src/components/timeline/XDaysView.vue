@@ -9,9 +9,12 @@ import { CalendarCore } from '@/wasm/core-wrapper';
 import { getCurrentViewDatetime } from '@/utils';
 import { useRoute } from 'vue-router';
 import CursorLine from '@/components/timeline/CursorLine.vue';
+import { useWindowSize } from '@vueuse/core';
 
 const { settings } = useSettings();
-const { dayName } = useTranslation();
+const { dayNameShort, dayNameSuperShort } = useTranslation();
+const { width } = useWindowSize(); // reactive window size
+const isMobile = computed(() => width.value < 500);
 const route = useRoute();
 
 const props = defineProps<{
@@ -95,9 +98,10 @@ defineExpose({ updateData });
 <template>
   <div id="view-container">
     <div id="top-bar">
-      <span v-for="day in dates" :key="day.toMillis()" :class="{ today: day.hasSame(DateTime.now(), 'day') }">{{
-        `${day.day}. ${dayName(day)}`
-      }}</span>
+      <span v-for="day in dates" :key="day.toMillis()" :class="{ today: day.hasSame(DateTime.now(), 'day') }">
+        <template v-if="isMobile">{{ `${day.day}. ${dayNameSuperShort(day)}` }}</template>
+        <template v-else>{{ `${day.day}. ${dayNameShort(day)}` }}</template>
+      </span>
     </div>
     <div id="left-time-bar">
       <span v-for="h in hoursOnGrid" :key="h">{{ h }}</span>

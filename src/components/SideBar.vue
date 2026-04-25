@@ -61,6 +61,8 @@ aside {
     align-items: center;
     justify-content: center;
     padding: 0.3rem;
+    width: 2.2rem;
+    height: 2rem;
 
     border-radius: var(--small-border-radius);
 
