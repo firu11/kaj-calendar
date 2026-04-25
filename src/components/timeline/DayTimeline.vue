@@ -11,7 +11,6 @@ import CursorToday from '@/components/timeline/CursorToday.vue';
 import { useEventModal } from '@/composables/useEventModal';
 
 // TODO
-// - mobile press-hold-drag
 // - multi day event create with horizontal drag
 
 const { y } = useMouse(); // const { x, y, sourceType } = useMouse();
@@ -56,9 +55,7 @@ const nonoverlappingGroups = computed(() => {
     }
 
     // if it overlapped with the end of every existing lane, create a new lane
-    if (!placed) {
-      lanes.push([event]);
-    }
+    if (!placed) lanes.push([event]);
   }
 
   return lanes;
@@ -68,6 +65,7 @@ const nonoverlappingGroups = computed(() => {
 
 const timelineRef = useTemplateRef('timeline-ref');
 const drag = ref({ active: false, startY: 0 });
+let holdTimeout: number | null = null;
 
 const snapToGridHeight = computed(() => {
   if (!timelineRef.value) return 0;
@@ -127,18 +125,19 @@ function dragStart(e: PointerEvent) {
       targetClasses.contains('day-timeline')
     )
   )
-    return; // clicked on existing event
+    return;
 
-  drag.value.active = true;
-  const snapToGridHeight = timelineRef.value?.clientHeight! / numberOfHours() / 2;
+  if (e.pointerType === 'touch') {
+    e.preventDefault();
+    holdTimeout = window.setTimeout(() => {
+      startDragging(e);
+    }, 100);
 
-  let startY = y.value - timelineRef.value!.getBoundingClientRect().y;
-  startY = Math.max(0, startY);
-  startY = Math.floor(startY / snapToGridHeight) * snapToGridHeight;
-
-  drag.value.startY = startY;
-
-  window.addEventListener('pointerup', dragStop); // listen for stop
+    window.addEventListener('pointerup', cancelHold);
+    window.addEventListener('pointermove', cancelHold);
+  } else {
+    startDragging(e); // mouse = immediate
+  }
 }
 
 function dragStop(_: MouseEvent) {
@@ -151,6 +150,29 @@ function dragStop(_: MouseEvent) {
   eventModal.open(event);
 
   window.removeEventListener('pointerup', dragStop); // cleanup
+}
+
+function startDragging(_: PointerEvent) {
+  drag.value.active = true;
+  const snapToGridHeight = timelineRef.value!.clientHeight / numberOfHours() / 2;
+
+  let startY = y.value - timelineRef.value!.getBoundingClientRect().y;
+  startY = Math.max(0, startY);
+  startY = Math.floor(startY / snapToGridHeight) * snapToGridHeight;
+
+  drag.value.startY = startY;
+
+  window.addEventListener('pointerup', dragStop); // listen for stop
+}
+
+function cancelHold() {
+  if (holdTimeout) {
+    clearTimeout(holdTimeout);
+    holdTimeout = null;
+  }
+
+  window.removeEventListener('pointerup', cancelHold);
+  window.removeEventListener('pointermove', cancelHold);
 }
 </script>
 
@@ -180,6 +202,10 @@ function dragStop(_: MouseEvent) {
 .day-timeline {
   border-left: var(--grid-border);
   position: relative;
+
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .timeline-grid {
