@@ -162,7 +162,7 @@ async function deleteEvent() {
       await CalendarCore.removeEvent(event);
       console.timeEnd('Time to delete event');
 
-      console.log('deleted repeating event:', event);
+      console.log('deleted event:', event);
     } else {
       strategyModal.open('delete'); // pop-up with strategy options
       return; // don't close this eventModal just yet
@@ -192,6 +192,7 @@ async function updateWithStrategy(strategy: UpdateStrategy) {
   }
 
   emit('refresh-data');
+  strategyModal.close();
   thisModal.close();
 }
 
