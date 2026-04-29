@@ -3,6 +3,9 @@ import { onKeyStroke } from '@vueuse/core';
 import router from '@/router';
 import { getWeekAlignedRedirect, moveView } from '@/utils';
 import { DateTime } from 'luxon';
+import { useEventModal } from '@/composables/useEventModal';
+import { useCalendarModal } from '@/composables/useCalendarModal';
+import { useStrategyModal } from '@/composables/useStrategyModal';
 
 export function useKeyboard() {
   function inputNeededElsewhere(): boolean {
@@ -54,6 +57,23 @@ export function useKeyboard() {
       if (inputNeededElsewhere()) return;
       e.preventDefault();
       moveView(false, router);
+    });
+
+    // ESC -> close modal
+    onKeyStroke('Escape', (e) => {
+      e.preventDefault();
+
+      const calendarModal = useCalendarModal();
+      const eventModal = useEventModal();
+      const strategyModal = useStrategyModal();
+
+      if (calendarModal.isOpen.value) {
+        calendarModal.close();
+      } else if (eventModal.isOpen.value && !strategyModal.isOpen.value) {
+        eventModal.close();
+      } else if (eventModal.isOpen.value && strategyModal.isOpen.value) {
+        strategyModal.close();
+      }
     });
   });
 }
