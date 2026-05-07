@@ -10,7 +10,7 @@ import { useStrategyModal } from '@/composables/useStrategyModal';
 export function useKeyboard() {
   function inputNeededElsewhere(): boolean {
     return document.activeElement!.matches(
-      'input:not([type="radio"]), textarea, select, [contenteditable], button, [role="textbox"], [role="combobox"]',
+      'input:not([type="radio"]), textarea, select, [contenteditable], [role="textbox"], [role="combobox"]',
     );
   }
 
