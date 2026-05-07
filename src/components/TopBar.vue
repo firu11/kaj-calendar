@@ -56,7 +56,13 @@ function capitalized(str: string): string {
     <NewEventBtn v-if="!sidebar.isOpen.value" :large="!isMobile" />
 
     <!-- TODO: remove disabled -->
-    <MultiToggle v-model="view" :options="views" :disabled="['Month']" name="view-selector" />
+    <MultiToggle
+      v-model="view"
+      :options="views"
+      :labels="views.map((s) => $t(`views.${s.toLocaleLowerCase()}`))"
+      :disabled="['Month']"
+      name="view-selector"
+    />
 
     <button id="today-btn" @click="jumpToToday">
       {{ $t('todayBtn') }}

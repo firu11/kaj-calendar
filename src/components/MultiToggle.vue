@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const props = defineProps<{
   options: string[];
+  labels?: string[];
   disabled?: string[];
   modelValue: string;
   name?: string;
@@ -27,7 +28,7 @@ const id = (i: number) => `toggle-${uid}-${i}`;
         :disabled="disabled?.includes(option)"
         @change="emit('update:modelValue', option)"
       />
-      <label :for="id(i)">{{ option }}</label>
+      <label :for="id(i)">{{ labels![i] ?? option }}</label>
     </template>
   </div>
 </template>
