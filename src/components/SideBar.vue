@@ -30,7 +30,7 @@ const sidebar = useSidebar();
         <FiSettings />
       </router-link>
       <a href="https://github.com/git-calendar/web-client" target="_blank">
-        <FiGithub />
+        <FiGithub style="position: relative; left: -2%; top: 2%" />
       </a>
     </div>
   </aside>
