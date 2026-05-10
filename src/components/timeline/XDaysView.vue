@@ -10,6 +10,7 @@ import { getCurrentViewDatetime } from '@/utils';
 import { useRoute } from 'vue-router';
 import CursorLine from '@/components/timeline/CursorLine.vue';
 import { useWindowSize } from '@vueuse/core';
+import AllDayBar from '@/components/AllDayBar.vue';
 
 const { settings } = useSettings();
 const { dayNameShort, dayNameSuperShort } = useTranslation();
@@ -62,13 +63,21 @@ const hoursOnGrid = computed(() => {
   return result;
 });
 
-const eventsByDay = ref<CalendarEvent[][]>(Array.from({ length: props.numOfDays }, () => []));
+const eventsTimeline = ref<CalendarEvent[][]>(Array.from({ length: props.numOfDays }, () => []));
+const eventsWholeDay = ref<CalendarEvent[]>(Array.from({ length: props.numOfDays }));
 
-async function getEventsForWeek(): Promise<CalendarEvent[][]> {
-  const result: CalendarEvent[][] = Array.from({ length: 7 }, () => []);
+async function updateData() {
+  const resultTimeline: CalendarEvent[][] = Array.from({ length: 7 }, () => []);
+  const resultWholeDay: CalendarEvent[] = [];
   const events = await CalendarCore.getEvents(startDate.value, startDate.value.plus({ day: props.numOfDays }));
 
   for (const event of events) {
+    if (isWholeDay(event) || event.from.day != event.to.day) {
+      // add to whole day events, not timeline
+      resultWholeDay.push(event);
+      continue;
+    }
+
     // normalize to start of day
     const eventDate = event.from.startOf('day');
 
@@ -78,20 +87,25 @@ async function getEventsForWeek(): Promise<CalendarEvent[][]> {
 
     // add it to appropriate day
     if (dayIndex >= 0 && dayIndex < 7) {
-      result[dayIndex]?.push(event);
+      resultTimeline[dayIndex]?.push(event);
     }
   }
 
-  return result;
+  eventsTimeline.value = resultTimeline;
+  eventsWholeDay.value = resultWholeDay;
+}
+
+function isWholeDay(event: CalendarEvent): boolean {
+  return getTimeStr(event.from) == '00:00' && getTimeStr(event.to) == '23:59';
+}
+
+function getTimeStr(t: DateTime): string {
+  return t.toFormat('HH:mm');
 }
 
 onMounted(async () => {
   await updateData();
 });
-
-async function updateData() {
-  eventsByDay.value = await getEventsForWeek();
-}
 defineExpose({ updateData });
 </script>
 
@@ -103,6 +117,19 @@ defineExpose({ updateData });
         <template v-else>{{ `${day.day}. ${dayNameShort(day)}` }}</template>
       </span>
     </div>
+
+    <div class="day-lines">
+      <div
+        v-for="i in numOfDays + 1"
+        :key="i"
+        class="day-line"
+        :style="{ left: ((i - 1) / numOfDays) * 100 + '%' }"
+      ></div>
+    </div>
+
+    <span>{{ $t('allday') }}</span>
+    <AllDayBar :numOfDays="numOfDays" :events="eventsWholeDay" />
+
     <div id="left-time-bar">
       <span v-for="h in hoursOnGrid" :key="h">{{ h }}</span>
     </div>
@@ -112,14 +139,14 @@ defineExpose({ updateData });
 
       <div class="hour-lines">
         <div
-          v-for="hour in hoursOnGrid.length"
+          v-for="hour in hoursOnGrid.length + 1"
           :key="hour"
           class="hour-line"
-          :style="{ top: (hour / hoursOnGrid.length) * 100 + '%' }"
+          :style="{ top: ((hour - 1) / hoursOnGrid.length) * 100 + '%' }"
         ></div>
       </div>
 
-      <DayTimeline v-for="(d, i) in dates" :key="d.toMillis()" :date="d" :events="eventsByDay[i]!" />
+      <DayTimeline v-for="(d, i) in dates" :key="d.toMillis()" :date="d" :events="eventsTimeline[i]" />
     </div>
   </div>
 </template>
@@ -130,13 +157,23 @@ defineExpose({ updateData });
 
   display: grid;
   grid-template-columns: 3rem auto;
-  grid-template-rows: 2rem auto;
+  grid-template-rows: 1.5rem min-content auto;
   grid-template-areas:
     '- datebar'
+    'allday-label allday'
     'timebar content';
 
   position: relative;
   margin: 1rem;
+
+  > span:first-of-type {
+    font-size: 0.7rem;
+    text-align: right;
+    grid-area: allday-label;
+    padding-right: 0.6rem;
+    position: relative;
+    top: -3px;
+  }
 }
 
 #top-bar,
@@ -148,12 +185,14 @@ defineExpose({ updateData });
 
 #content {
   position: relative;
-  border-right: var(--grid-border); /* add the missing border for the grid */
   grid-area: content;
 }
 
+#allday-bar {
+  grid-area: allday;
+}
+
 #top-bar {
-  border-bottom: var(--grid-border);
   grid-area: datebar;
 
   span.today {
@@ -164,6 +203,7 @@ defineExpose({ updateData });
 #left-time-bar {
   grid-area: timebar;
   display: grid;
+  width: 3rem;
 
   span {
     border-top: 1px solid transparent;
@@ -176,20 +216,35 @@ defineExpose({ updateData });
   }
 }
 
-.hour-lines {
+.hour-lines,
+.day-lines {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   pointer-events: none; /* allow clicking events */
+
+  .hour-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--grid-thickness);
+    background: var(--grid-color);
+  }
+
+  .day-line {
+    position: absolute;
+    top: -1px;
+    bottom: -1px;
+    width: var(--grid-thickness);
+    background: var(--grid-color);
+  }
 }
 
-.hour-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: var(--grid-thickness);
-  background: var(--grid-color);
+.day-lines {
+  left: -1px;
+  margin: 1.43rem 0 0 3rem;
+  border-top: var(--grid-border);
 }
 </style>

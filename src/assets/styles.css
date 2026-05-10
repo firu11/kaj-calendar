@@ -4,6 +4,8 @@
 :root {
   --sidebar-width: 15rem;
   --topbar-height: 3rem;
+  --grid-thickness: 1px;
+  --grid-border: var(--grid-thickness) solid var(--grid-color);
 }
 
 * {

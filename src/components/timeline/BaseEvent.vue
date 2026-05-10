@@ -17,7 +17,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const dynamicStyles = computed(() => ({
   top: `calc(${props.topStyle} + 1.5px)`, // few pixel space between touching events
-  height: `calc(${props.heightStyle} - 3px)`,
+  height: `calc(${props.heightStyle} - 2px)`,
   '--event-color': props.color,
 }));
 </script>

@@ -21,8 +21,6 @@
   --sidebar-hover-color: color-mix(in srgb, transparent, white 10%);
 
   --grid-color: #262626;
-  --grid-thickness: 1px;
-  --grid-border: var(--grid-thickness) solid var(--grid-color);
 }
 
 [data-theme='light'] {
@@ -42,6 +40,4 @@
   --sidebar-hover-color: color-mix(in srgb, transparent, black 10%);
 
   --grid-color: #d1d1d1;
-  --grid-thickness: 1px;
-  --grid-border: var(--grid-thickness) solid var(--grid-color);
 }

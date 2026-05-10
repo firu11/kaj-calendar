@@ -8,9 +8,6 @@ import { useEventModal } from '@/composables/useEventModal';
 import CursorToday from '@/components/timeline/CursorToday.vue';
 import { useDraggingEvent } from '@/composables/useDraggingEvent';
 
-// TODO
-// - multi day event create with horizontal drag
-
 interface Props {
   date: DateTime;
   events: CalendarEvent[];
@@ -93,7 +90,6 @@ const { drag, placeholderTop, placeholderHeight, placeholderSubtitle, dragStart 
 
 <style scoped>
 .day-timeline {
-  border-left: var(--grid-border);
   position: relative;
 
   touch-action: none;

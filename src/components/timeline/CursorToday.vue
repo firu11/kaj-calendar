@@ -23,7 +23,7 @@ onMounted(() => {
   setTimeout(() => {
     updateTime();
     interval = setInterval(updateTime, 60 * 1000); // update every 1 minute
-  }, msTillFullMinute + 10); // match the second first, so that it doesnt update on XXh:XXm:30s every time but roughly at XXh:XXm:00s
+  }, msTillFullMinute); // match the second first, so that it doesnt update on XXh:XXm:30s every time but roughly at XXh:XXm:00s
 });
 
 onUnmounted(() => {
