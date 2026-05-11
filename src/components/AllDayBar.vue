@@ -70,7 +70,7 @@ const compEvents = computed(() => {
     <AllDayEvent
       v-for="v in compEvents"
       :key="v.event.id"
-      :title="v.event.title"
+      :event="v.event"
       :style="v.gridStyle"
       @click="eventModal.open(v.event)"
     />

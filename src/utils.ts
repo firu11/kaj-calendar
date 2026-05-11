@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon';
 import { type RouteParamsGeneric, type Router } from 'vue-router';
 import { useSettings } from '@/composables/useSettings';
+import type { CalendarEvent } from './types/core';
 
 const { settings } = useSettings();
 
@@ -113,4 +114,11 @@ export function timeInPercentOnTimeline(datetime: DateTime): number {
   const startHours = datetime.hour + datetime.minute / 60;
   const percent = Math.max(0, (startHours - viewStart) / numberOfHours());
   return percent;
+}
+
+/**
+ * Returns true/false whether event is wholeDay/allDay.
+ */
+export function isWholeDay(event: CalendarEvent): boolean {
+  return event.from.toFormat('HH:mm') == '00:00' && event.to.toFormat('HH:mm') == '23:59';
 }

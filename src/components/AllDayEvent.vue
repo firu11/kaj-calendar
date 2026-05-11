@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import type { CalendarEvent } from '@/types/core';
+import { isWholeDay, timeRangeFormat } from '@/utils';
 import { computed } from 'vue';
 
 const props = withDefaults(
   defineProps<{
-    title: string;
+    event: CalendarEvent;
     color?: string;
     temporary?: boolean;
   }>(),
@@ -20,7 +22,8 @@ const dynamicStyles = computed(() => ({
 
 <template>
   <div class="allday-event" :style="dynamicStyles" :class="{ temporary: temporary }">
-    {{ title }}
+    <span class="title">{{ event.title }}</span>
+    <span class="subtitle" v-show="!isWholeDay(event)">{{ timeRangeFormat(event.from, event.to) }}</span>
   </div>
 </template>
 
@@ -41,6 +44,23 @@ const dynamicStyles = computed(() => ({
   z-index: 400;
 
   width: calc(100% - 0.5px);
+
+  display: flex;
+  gap: 0.3rem;
+
+  .title {
+    height: 1rem;
+    line-height: 1.25rem;
+  }
+
+  .subtitle {
+    font-weight: 400;
+    font-size: 0.7rem;
+    opacity: 0.7;
+
+    height: 1rem;
+    line-height: 1.3rem;
+  }
 }
 
 .allday-event.temporary {

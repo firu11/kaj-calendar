@@ -6,7 +6,7 @@ import { useSettings } from '@/composables/useSettings';
 import { useTranslation } from '@/composables/useTranslation';
 import { DateTime } from 'luxon';
 import { CalendarCore } from '@/wasm/core-wrapper';
-import { getCurrentViewDatetime } from '@/utils';
+import { getCurrentViewDatetime, isWholeDay } from '@/utils';
 import { useRoute } from 'vue-router';
 import CursorLine from '@/components/timeline/CursorLine.vue';
 import { useWindowSize } from '@vueuse/core';
@@ -93,14 +93,6 @@ async function updateData() {
 
   eventsTimeline.value = resultTimeline;
   eventsWholeDay.value = resultWholeDay;
-}
-
-function isWholeDay(event: CalendarEvent): boolean {
-  return getTimeStr(event.from) == '00:00' && getTimeStr(event.to) == '23:59';
-}
-
-function getTimeStr(t: DateTime): string {
-  return t.toFormat('HH:mm');
 }
 
 onMounted(async () => {
