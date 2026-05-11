@@ -11,7 +11,8 @@
     "12hourFormat": "12-hour time",
     "24hourFormat": "24-hour time",
     "weekStart": "Week start",
-    "dragPrecision": "Drag precision"
+    "dragPrecision": "Drag precision",
+    "hourRange": "Hour range"
   },
   "event": {
     "new": "New Event",

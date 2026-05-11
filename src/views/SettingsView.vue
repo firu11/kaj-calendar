@@ -16,6 +16,15 @@ async function setCorsProxy() {
     alert('Invalid CORS Proxy URL!');
   }
 }
+
+function formatHour(hour: number): string {
+  if (settings.value.timeFormat !== 'h12') {
+    return `${hour.toString().padStart(2, '0')}:00`;
+  }
+  if (hour === 0 || hour === 24) return '12 AM';
+  if (hour === 12) return '12 PM';
+  return hour < 12 ? `${hour} AM` : `${hour - 12} PM`;
+}
 </script>
 
 <template>
@@ -46,6 +55,17 @@ async function setCorsProxy() {
         <option v-for="i in 7" :key="i" :value="i">
           {{ dayNameLong(DateTime.now().set({ weekday: i as WeekdayNumbers })) }}
         </option>
+      </select>
+    </label>
+
+    <label>
+      {{ $t('settings.hourRange') }}:
+      <select name="day-view-start-hour" v-model="settings.dayViewStartHour">
+        <option v-for="h in 25" :key="h - 1" :value="h - 1">{{ formatHour(h - 1) }}</option>
+      </select>
+      –
+      <select name="day-view-end-hour" v-model="settings.dayViewEndHour">
+        <option v-for="h in 25" :key="h - 1" :value="h - 1">{{ formatHour(h - 1) }}</option>
       </select>
     </label>
 
@@ -86,12 +106,6 @@ form {
 
   > label {
     width: auto;
-  }
-}
-
-option {
-  span {
-    color: red;
   }
 }
 </style>
