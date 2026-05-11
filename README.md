@@ -18,9 +18,11 @@ npm run dev     # run locally
 - [x] logo (git + calendar ?)
 - [x] multiple calendars
 - [ ] tags
+  - [ ] colors
 - [x] repetition
-- [ ] multi-day events bar
+- [x] multi-day events bar
 - [x] drag to create event
   - [ ] drag horizontally for multi-day event
 - [ ] month view
 - [x] mobile friendly
+  - [ ] verify drag-to-create on ios etc.
