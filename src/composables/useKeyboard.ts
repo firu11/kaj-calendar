@@ -7,6 +7,8 @@ import { useEventModal } from '@/composables/useEventModal';
 import { useCalendarModal } from '@/composables/useCalendarModal';
 import { useStrategyModal } from '@/composables/useStrategyModal';
 
+const eventModal = useEventModal();
+
 export function useKeyboard() {
   function inputNeededElsewhere(): boolean {
     return document.activeElement!.matches(
@@ -16,6 +18,13 @@ export function useKeyboard() {
 
   // after mounted/ready cuz of router
   onMounted(() => {
+    // N -> open modal for new event
+    onKeyStroke('n', (e) => {
+      if (inputNeededElsewhere()) return;
+      e.preventDefault();
+      eventModal.open();
+    });
+
     // T -> go to today
     onKeyStroke('t', (e) => {
       if (inputNeededElsewhere()) return;
