@@ -28,7 +28,7 @@ const id = (i: number) => `toggle-${uid}-${i}`;
         :disabled="disabled?.includes(option)"
         @change="emit('update:modelValue', option)"
       />
-      <label :for="id(i)">{{ labels![i] ?? option }}</label>
+      <label :for="id(i)">{{ labels ? (labels[i] ?? option) : option }}</label>
     </template>
   </div>
 </template>
