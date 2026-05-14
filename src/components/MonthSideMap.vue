@@ -221,6 +221,8 @@ const hoverInterval = computed(() => {
   cursor: pointer;
   position: relative;
 
+  transition: 0.3s ease-out;
+
   &.today {
     font-weight: 900;
     position: relative;

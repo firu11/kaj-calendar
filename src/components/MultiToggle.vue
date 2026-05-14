@@ -59,6 +59,8 @@ const id = (i: number) => `toggle-${uid}-${i}`;
   cursor: pointer;
   user-select: none;
   opacity: 0.5;
+
+  transition: 0.15s ease;
 }
 
 .toggle label:hover {
