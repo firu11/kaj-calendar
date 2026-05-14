@@ -9,6 +9,7 @@ import MultiToggle from '@/components/MultiToggle.vue';
 import SidebarCloseBtn from '@/components/SidebarCloseBtn.vue';
 import NewEventBtn from '@/components/NewEventBtn.vue';
 import { useMobile } from '@/composables/useMobile';
+import OfflineDetector from '@/components/OfflineDetector.vue';
 
 const router = useRouter();
 const sidebar = useSidebar();
@@ -52,6 +53,8 @@ function jumpToToday() {
     <SidebarCloseBtn v-if="!sidebar.isOpen.value" />
     <NewEventBtn v-if="!sidebar.isOpen.value" :large="!isMobile" />
 
+    <OfflineDetector />
+
     <!-- TODO: remove disabled -->
     <MultiToggle
       v-model="view"
@@ -83,7 +86,7 @@ header {
   grid-area: topbar;
 }
 
-.new-event-btn {
+.connection-status {
   margin-right: auto;
 }
 
