@@ -1,5 +1,6 @@
 # Git Calendar Webový Klient
-Webový klient pro [git-calendar/core](https://github.com/git-calendar/core).
+Webový klient pro [git-calendar/core](https://github.com/git-calendar/core).\
+Vystaveno na vyzkoušení [zde](https://firu11.github.io/kaj-calendar).
 
 ### Kontext projektu:
 Jde o webovou aplikaci, která poskytuje grafické rozhraní pro kalendář používající Git repozitáře jako uložistě.
