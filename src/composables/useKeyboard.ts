@@ -1,7 +1,7 @@
 import { onMounted } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
 import router from '@/router';
-import { getWeekAlignedRedirect, moveView } from '@/utils';
+import { getCurrentViewDatetime, getWeekAlignedRedirect, moveView } from '@/utils';
 import { DateTime } from 'luxon';
 import { useEventModal } from '@/composables/useEventModal';
 import { useCalendarModal } from '@/composables/useCalendarModal';
@@ -44,11 +44,14 @@ export function useKeyboard() {
     onKeyStroke('w', (e) => {
       if (inputNeededElsewhere()) return;
       e.preventDefault();
-      router.replace({ params: { view: 'week' } });
+
+      const activeDate = getCurrentViewDatetime(router.currentRoute.value.params);
+      router.replace(getWeekAlignedRedirect(activeDate));
     });
 
     // M -> switch to month view
     onKeyStroke('m', (e) => {
+      return; // TODO
       if (inputNeededElsewhere()) return;
       e.preventDefault();
       router.replace({ params: { view: 'month' } });

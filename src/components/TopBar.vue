@@ -15,20 +15,24 @@ const sidebar = useSidebar();
 
 const isMobile = useMobile();
 
-const views = ['4days', 'Week', 'Month'];
-const view = ref(capitalized(router.currentRoute.value.params.view.toString()));
-
-function changeView(viewName: string) {
-  view.value = viewName;
-  if (view.value === 'Week') {
+const views = ['4days', 'week', 'month'];
+const view = ref('');
+watch(
+  () => router.currentRoute.value.params.view,
+  (newView: string | string[]) => {
+    view.value = newView.toString();
+  },
+  { immediate: true },
+);
+watch(view, (newView: string) => {
+  if (view.value === 'week') {
     // week view should be aligned
     let current = getCurrentViewDatetime(router.currentRoute.value.params);
     router.push(getWeekAlignedRedirect(current));
   } else {
-    router.push({ name: 'calendar', params: { view: view.value.toLowerCase() } });
+    router.push({ name: 'calendar', params: { view: newView } });
   }
-}
-watch(view, changeView);
+});
 
 function jumpToToday() {
   const today = DateTime.now();
@@ -37,16 +41,9 @@ function jumpToToday() {
   if (params.view === 'week') {
     // special case for week
     router.push(getWeekAlignedRedirect(today));
-    return;
+  } else {
+    router.push({ name: 'calendar', params: { year: today.year, month: today.month, day: today.day } });
   }
-  router.push({ name: 'calendar', params: { year: today.year, month: today.month, day: today.day } });
-}
-
-function capitalized(str: string): string {
-  let result: string;
-  result = str.charAt(0).toUpperCase();
-  result += str.slice(1) || '';
-  return result;
 }
 </script>
 
@@ -60,7 +57,7 @@ function capitalized(str: string): string {
       v-model="view"
       :options="views"
       :labels="views.map((s) => $t(`views.${s.toLocaleLowerCase()}`))"
-      :disabled="['Month']"
+      :disabled="['month']"
       name="view-selector"
     />
 
